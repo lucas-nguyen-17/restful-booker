@@ -1,5 +1,6 @@
 # restful-booker
 A simple Node booking form for testing RESTful web services.
+It uses in-memory DB, that means every data will be erased after shutting down the app.
 
 # Requirements
 - Docker 17.09.0
