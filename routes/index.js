@@ -1,20 +1,19 @@
-var express = require('express');
-var router  = express.Router(),
-    parse   = require('../helpers/parser'),
+const express = require('express');
+const router = express.Router(),
+    parse = require('../helpers/parser'),
     crypto = require('crypto'),
     Booking = require('../models/booking'),
     validator = require('../helpers/validator'),
     creator = require('../helpers/bookingcreator'),
-    ua      = require('universal-analytics');
-    globalLogins = {};
+globalLogins = {};
 
 const { v4: uuidv4 } = require('uuid');
 
 if(process.env.SEED === 'true'){
-  var count = 1;
+  let count = 1;
 
   (function createBooking(){
-    var newBooking = creator.createBooking()
+    const newBooking = creator.createBooking();
 
     Booking.create(newBooking, function(err, result){
       if(err) return console.error(err);
@@ -26,8 +25,6 @@ if(process.env.SEED === 'true'){
     });
   })()
 };
-
-var visitor = ua('UA-118712228-2', uuidv4());
 
 /**
  * @api {get} ping HealthCheck
@@ -45,9 +42,6 @@ var visitor = ua('UA-118712228-2', uuidv4());
  *     HTTP/1.1 201 Created
  */
 router.get('/ping', function(req, res, next) {
-  visitor.set('uid', uuidv4());
-  visitor.pageview('/ping', 'https://restful-booker.herokuapp.com/', "GET /Ping").send();
-
   res.sendStatus(201);
 });
 
@@ -94,10 +88,7 @@ router.get('/ping', function(req, res, next) {
 ] 
 */
 router.get('/booking', function(req, res, next) {
-  visitor.set('uid', uuidv4());
-  visitor.pageview('/booking', 'https://restful-booker.herokuapp.com/', "GET /booking").send();
-
-  var query = {};
+  const query = {};
 
   if(typeof(req.query.firstname) != 'undefined'){
     query.firstname = req.query.firstname
@@ -116,7 +107,7 @@ router.get('/booking', function(req, res, next) {
   }
 
   Booking.getIDs(query, function(err, record){
-    var booking = parse.bookingids(req, record);
+    const booking = parse.bookingids(req, record);
 
     if(!booking){
       res.sendStatus(418);
@@ -184,12 +175,9 @@ router.get('/booking', function(req, res, next) {
  * firstname=Jim&lastname=Brown&totalprice=111&depositpaid=true&bookingdates%5Bcheckin%5D=2018-01-01&bookingdates%5Bcheckout%5D=2019-01-01
  */
 router.get('/booking/:id',function(req, res, next){
-  visitor.set('uid', uuidv4());
-  visitor.pageview('/booking/:id', 'https://restful-booker.herokuapp.com/', "GET /booking/:id").send();
-
   Booking.get(req.params.id, function(err, record){
     if(record){
-      var booking = parse.booking(req.headers.accept, record);
+      const booking = parse.booking(req.headers.accept, record);
 
       if(!booking){
         res.sendStatus(418);
@@ -309,9 +297,6 @@ router.get('/booking/:id',function(req, res, next){
  * bookingid=1&booking%5Bfirstname%5D=Jim&booking%5Blastname%5D=Brown&booking%5Btotalprice%5D=111&booking%5Bdepositpaid%5D=true&booking%5Bbookingdates%5D%5Bcheckin%5D=2018-01-01&booking%5Bbookingdates%5D%5Bcheckout%5D=2019-01-01
  */
 router.post('/booking', function(req, res, next) {
-  visitor.set('uid', uuidv4());
-  visitor.pageview('/booking', 'https://restful-booker.herokuapp.com/', "POST /booking").send();
-
   newBooking = req.body;
   if(req.headers['content-type'] === 'text/xml') newBooking = newBooking.booking;
 
@@ -321,7 +306,7 @@ router.post('/booking', function(req, res, next) {
         if(err)
           res.sendStatus(500);
         else {
-          var record = parse.bookingWithId(req, booking);
+          const record = parse.bookingWithId(req, booking);
 
           if(!record){
             res.sendStatus(418);
@@ -355,8 +340,8 @@ router.post('/booking', function(req, res, next) {
  * 
  * @apiHeader {string} Content-Type=application/json                    Sets the format of payload you are sending. Can be application/json or text/xml
  * @apiHeader {string} Accept=application/json                          Sets what format the response body is returned in. Can be application/json or application/xml
- * @apiHeader {string} [Cookie=token=<token_value>]                     Sets an authorisation token to access the PUT endpoint, can be used as an alternative to the Authorisation
- * @apiHeader {string} [Authorisation=Basic YWRtaW46cGFzc3dvcmQxMjM=]   Basic authorisation header to access the PUT endpoint, can be used as an alternative to the Cookie header
+ * @apiHeader {string} [Cookie=token=&lt;token_value&gt;]                     Sets an authorization token to access the PUT endpoint, can be used as an alternative to the Authorization
+ * @apiHeader {string} [Authorization=Basic YWRtaW46cGFzc3dvcmQxMjM=]   Basic authorization header to access the PUT endpoint, can be used as an alternative to the Cookie header
  * 
  * @apiExample JSON example usage:
  * curl -X PUT \
@@ -381,7 +366,7 @@ router.post('/booking', function(req, res, next) {
   https://restful-booker.herokuapp.com/booking/1 \
   -H 'Content-Type: text/xml' \
   -H 'Accept: application/xml' \
-  -H 'Authorisation: Basic YWRtaW46cGFzc3dvcmQxMjM=' \
+  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQxMjM=' \
   -d '<booking>
     <firstname>James</firstname>
     <lastname>Brown</lastname>
@@ -399,7 +384,7 @@ router.post('/booking', function(req, res, next) {
   https://restful-booker.herokuapp.com/booking/1 \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -H 'Accept: application/x-www-form-urlencoded' \
-  -H 'Authorisation: Basic YWRtaW46cGFzc3dvcmQxMjM=' \
+  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQxMjM=' \
   -d 'firstname=Jim&lastname=Brown&totalprice=111&depositpaid=true&bookingdates%5Bcheckin%5D=2018-01-01&bookingdates%5Bcheckout%5D=2018-01-02'
  * 
  * @apiSuccess {String}  firstname             Firstname for the guest who made the booking
@@ -446,9 +431,6 @@ router.post('/booking', function(req, res, next) {
  * firstname=Jim&lastname=Brown&totalprice=111&depositpaid=true&bookingdates%5Bcheckin%5D=2018-01-01&bookingdates%5Bcheckout%5D=2019-01-01
  */
 router.put('/booking/:id', function(req, res, next) {
-  visitor.set('uid', uuidv4());
-  visitor.pageview('/booking/:id', 'https://restful-booker.herokuapp.com/', "PUT /booking/:id").send();
-
   if(globalLogins[req.cookies.token] || req.headers.authorization == 'Basic YWRtaW46cGFzc3dvcmQxMjM='){
     updatedBooking = req.body;
     if(req.headers['content-type'] === 'text/xml') updatedBooking = updatedBooking.booking;
@@ -458,7 +440,7 @@ router.put('/booking/:id', function(req, res, next) {
         Booking.update(req.params.id, updatedBooking, function(err){
           Booking.get(req.params.id, function(err, record){
             if(record){
-              var booking = parse.booking(req.headers.accept, record);
+              const booking = parse.booking(req.headers.accept, record);
 
               if(!booking){
                 res.sendStatus(418);
@@ -498,8 +480,8 @@ router.put('/booking/:id', function(req, res, next) {
  * 
  * @apiHeader {string} Content-Type=application/json                    Sets the format of payload you are sending. Can be application/json or text/xml
  * @apiHeader {string} Accept=application/json                          Sets what format the response body is returned in. Can be application/json or application/xml
- * @apiHeader {string} [Cookie=token=<token_value>]                     Sets an authorisation token to access the PUT endpoint, can be used as an alternative to the Authorisation
- * @apiHeader {string} [Authorisation=Basic YWRtaW46cGFzc3dvcmQxMjM=]   Basic authorisation header to access the PUT endpoint, can be used as an alternative to the Cookie header
+ * @apiHeader {string} [Cookie=token=&lt;token_value&gt;]                     Sets an authorization token to access the PUT endpoint, can be used as an alternative to the Authorization
+ * @apiHeader {string} [Authorization=Basic YWRtaW46cGFzc3dvcmQxMjM=]   Basic authorization header to access the PUT endpoint, can be used as an alternative to the Cookie header
  * 
  * @apiExample JSON example usage:
  * curl -X PUT \
@@ -517,7 +499,7 @@ router.put('/booking/:id', function(req, res, next) {
   https://restful-booker.herokuapp.com/booking/1 \
   -H 'Content-Type: text/xml' \
   -H 'Accept: application/xml' \
-  -H 'Authorisation: Basic YWRtaW46cGFzc3dvcmQxMjM=' \
+  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQxMjM=' \
   -d '<booking>
     <firstname>James</firstname>
     <lastname>Brown</lastname>
@@ -528,7 +510,7 @@ router.put('/booking/:id', function(req, res, next) {
   https://restful-booker.herokuapp.com/booking/1 \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -H 'Accept: application/x-www-form-urlencoded' \
-  -H 'Authorisation: Basic YWRtaW46cGFzc3dvcmQxMjM=' \
+  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQxMjM=' \
   -d 'firstname=Jim&lastname=Brown'
  * 
  * @apiSuccess {String}  firstname             Firstname for the guest who made the booking
@@ -575,9 +557,6 @@ router.put('/booking/:id', function(req, res, next) {
  * firstname=Jim&lastname=Brown&totalprice=111&depositpaid=true&bookingdates%5Bcheckin%5D=2018-01-01&bookingdates%5Bcheckout%5D=2019-01-01
  */
 router.patch('/booking/:id', function(req, res) {
-  visitor.set('uid', uuidv4());
-  visitor.pageview('/booking/:id', 'https://restful-booker.herokuapp.com/', "DELETE /booking/:id").send();
-
   if(globalLogins[req.cookies.token] || req.headers.authorization == 'Basic YWRtaW46cGFzc3dvcmQxMjM='){
     updatedBooking = req.body;
 
@@ -586,7 +565,7 @@ router.patch('/booking/:id', function(req, res) {
     Booking.update(req.params.id, updatedBooking, function(err){
       Booking.get(req.params.id, function(err, record){
         if(record){
-          var booking = parse.booking(req.headers.accept, record);
+          const booking = parse.booking(req.headers.accept, record);
 
           if(!booking){
             res.sendStatus(500);
@@ -612,8 +591,8 @@ router.patch('/booking/:id', function(req, res) {
  *
  * @apiParam (Url Parameter) {Number} id  ID for the booking you want to update
  * 
- * @apiHeader {string} [Cookie=token=<token_value>]                     Sets an authorisation token to access the DELETE endpoint, can be used as an alternative to the Authorisation
- * @apiHeader {string} [Authorisation=Basic YWRtaW46cGFzc3dvcmQxMjM=]   Basic authorisation header to access the DELETE endpoint, can be used as an alternative to the Cookie header
+ * @apiHeader {string} [Cookie=token=&lt;token_value&gt;]                     Sets an authorization token to access the DELETE endpoint, can be used as an alternative to the Authorization
+ * @apiHeader {string} [Authorization=Basic YWRtaW46cGFzc3dvcmQxMjM=]   Basic authorization header to access the DELETE endpoint, can be used as an alternative to the Cookie header
  * 
  * @apiExample Example 1 (Cookie):
  * curl -X DELETE \
@@ -625,7 +604,7 @@ router.patch('/booking/:id', function(req, res) {
  * curl -X DELETE \
   https://restful-booker.herokuapp.com/booking/1 \
   -H 'Content-Type: application/json' \
-  -H 'Authorisation: Basic YWRtaW46cGFzc3dvcmQxMjM='
+  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQxMjM='
  * 
  * @apiSuccess {String} OK Default HTTP 201 response
  * 
@@ -633,9 +612,6 @@ router.patch('/booking/:id', function(req, res) {
  *     HTTP/1.1 201 Created
 */
 router.delete('/booking/:id', function(req, res, next) {
-  visitor.set('uid', uuidv4());
-  visitor.pageview('/booking/:id', 'https://restful-booker.herokuapp.com/', "DELETE /booking/:id").send();
-
   if(globalLogins[req.cookies.token] || req.headers.authorization == 'Basic YWRtaW46cGFzc3dvcmQxMjM='){
     Booking.get(req.params.id, function(err, record){
       if(record){
@@ -681,13 +657,10 @@ router.delete('/booking/:id', function(req, res, next) {
 }
  */
 router.post('/auth', function(req, res, next){
-  visitor.set('uid', uuidv4());
-  visitor.pageview('/auth', 'https://restful-booker.herokuapp.com/', "POST /auth").send();
-
   if(req.body.username === "admin" && req.body.password === "password123"){
-    var token = crypto.randomBytes(Math.ceil(15/2))
-                    .toString('hex')
-                    .slice(0,15);
+    const token = crypto.randomBytes(Math.ceil(15 / 2))
+        .toString('hex')
+        .slice(0, 15);
 
     globalLogins[token] = true;
 
